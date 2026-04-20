@@ -9,6 +9,11 @@ PII_PATTERNS: dict[str, str] = {
     "cccd": r"\b\d{12}\b",
     "credit_card": r"\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b",
     # TODO: Add more patterns (e.g., Passport, Vietnamese address keywords)
+    # IPv4 (strict hơn để tránh match 999.999.999.999)
+    "ip_address": r"\b(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}\b",
+    "passport": r"\b[A-Z][0-9]{7,8}\b",
+    "address": r"\b(?:số\s*\d+|so\s*\d+|thôn|xóm|ấp|đường|duong|phường|xa|xã|quận|huyện|tỉnh|tp\.?|thành phố)\b.*",
+    "url": r"https?://[^\s]+",
 }
 
 
