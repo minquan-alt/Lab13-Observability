@@ -54,3 +54,37 @@ alerts:
       More than 5% of requests are failing. Immediate investigation
       required to prevent SLO burn-rate exhaustion.
     runbook: docs/alerts.md#4-high-error-rate
+
+  # ──────────────────────────────────────────────────────────────
+  # Rule 5 – Chi phí hôm nay tăng > 30% so với trung bình 7 ngày
+  # (Proactive – phát hiện xu hướng trước khi vượt daily SLO)
+  # ──────────────────────────────────────────────────────────────
+  - name: daily_cost_vs_7day_avg
+    severity: P2
+    condition: today_cost_usd > 1.3 * avg_7day_cost_usd
+    type: trend-based
+    owner: finops-owner
+    description: >
+      Today's accumulated cost has exceeded 130% of the 7-day rolling
+      average. This is an early warning that the daily_cost_usd SLO
+      objective of $2.50 may be breached before end of day.
+      Common causes: new feature rollout, traffic spike, or prompt length increase.
+    notification: slack-channel-finops
+    runbook: docs/alerts.md#5-daily-cost-vs-7day-avg
+
+  # ──────────────────────────────────────────────────────────────
+  # Rule 6 – 1 user chiếm > 10% tổng chi phí trong 24h
+  # (Phát hiện abuse / bot traffic / infinite loop)
+  # ──────────────────────────────────────────────────────────────
+  - name: single_user_cost_dominance
+    severity: P2
+    condition: max(user_cost_24h) / total_cost_24h > 0.10
+    type: anomaly-based
+    owner: team-oncall
+    description: >
+      A single user account has consumed more than 10% of the total
+      system cost in the last 24 hours. In a system with 50+ users,
+      this is statistically abnormal and may indicate API abuse,
+      a runaway bot, or an infinite retry loop in a client integration.
+    notification: slack-channel-oncall
+    runbook: docs/alerts.md#6-single-user-cost-dominance
