@@ -4,8 +4,8 @@
 
 ## 1. Team Metadata
 
-- [GROUP_NAME]: A2
-- [REPO_URL]: https://github.com/minquan-alt/Lab13-Observability.git
+- [GROUP_NAME]&#58; A2
+- [REPO_URL]&#58; https://github.com/minquan-alt/Lab13-Observability.git
 - [MEMBERS]:
   - Member A: [Name] | Role: Logging & PII
   - Member B: [Name] | Role: Tracing & Enrichment
