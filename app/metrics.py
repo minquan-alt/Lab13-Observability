@@ -11,16 +11,25 @@ ERRORS: Counter[str] = Counter()
 TRAFFIC: int = 0
 QUALITY_SCORES: list[float] = []
 
+from datetime import datetime
+
+REQUEST_TIMES: list[datetime] = []
+
+import time
+
 
 def record_request(latency_ms: int, cost_usd: float, tokens_in: int, tokens_out: int, quality_score: float) -> None:
     global TRAFFIC
     TRAFFIC += 1
+
+    now = datetime.now()
+    REQUEST_TIMES.append(now)
+
     REQUEST_LATENCIES.append(latency_ms)
     REQUEST_COSTS.append(cost_usd)
     REQUEST_TOKENS_IN.append(tokens_in)
     REQUEST_TOKENS_OUT.append(tokens_out)
     QUALITY_SCORES.append(quality_score)
-
 
 
 def record_error(error_type: str) -> None:
@@ -37,7 +46,11 @@ def percentile(values: list[int], p: int) -> float:
 
 
 
+from collections import Counter
+
 def snapshot() -> dict:
+    traffic_by_day = Counter(ts.strftime("%Y-%m-%d") for ts in REQUEST_TIMES)
+
     return {
         "traffic": TRAFFIC,
         "latency_p50": percentile(REQUEST_LATENCIES, 50),
@@ -49,4 +62,7 @@ def snapshot() -> dict:
         "tokens_out_total": sum(REQUEST_TOKENS_OUT),
         "error_breakdown": dict(ERRORS),
         "quality_avg": round(mean(QUALITY_SCORES), 4) if QUALITY_SCORES else 0.0,
+
+        # 🔥 NEW
+        "traffic_by_day": dict(traffic_by_day),
     }
