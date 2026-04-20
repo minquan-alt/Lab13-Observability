@@ -8,3 +8,53 @@
 {"user_id":"u08","session_id":"s08","feature":"qa","message":"How do I debug tail latency?"}
 {"user_id":"u09","session_id":"s09","feature":"qa","message":"What is the policy for PII and credit card 4111 1111 1111 1111?"}
 {"user_id":"u10","session_id":"s10","feature":"qa","message":"How should alerts be designed?"}
+{"user_id":"u11","session_id":"s11","feature":"qa","message":"What are best practices for log retention?"}
+{"user_id":"u12","session_id":"s12","feature":"qa","message":"How do distributed traces help debugging?"}
+{"user_id":"u13","session_id":"s13","feature":"summary","message":"Summarize incident response workflow"}
+{"user_id":"u14","session_id":"s14","feature":"qa","message":"Should logs include user IP addresses?"}
+{"user_id":"u15","session_id":"s15","feature":"qa","message":"How to monitor microservices effectively?"}
+{"user_id":"u16","session_id":"s16","feature":"summary","message":"Give a summary of alert fatigue mitigation"}
+{"user_id":"u17","session_id":"s17","feature":"qa","message":"What is SLO and how is it defined?"}
+{"user_id":"u18","session_id":"s18","feature":"qa","message":"How to correlate logs and traces?"}
+{"user_id":"u19","session_id":"s19","feature":"qa","message":"What data should be masked in logs?"}
+{"user_id":"u20","session_id":"s20","feature":"qa","message":"How to handle error budgets?"}
+{"user_id":"u21","session_id":"s21","feature":"summary","message":"Summarize log aggregation pipeline"}
+{"user_id":"u22","session_id":"s22","feature":"qa","message":"What is high cardinality in metrics?"}
+{"user_id":"u23","session_id":"s23","feature":"qa","message":"How to design dashboards for ops teams?"}
+{"user_id":"u24","session_id":"s24","feature":"qa","message":"What should be included in audit logs?"}
+{"user_id":"u25","session_id":"s25","feature":"summary","message":"Explain observability pillars briefly"}
+{"user_id":"u26","session_id":"s26","feature":"qa","message":"How to reduce noise in alerting systems?"}
+{"user_id":"u27","session_id":"s27","feature":"qa","message":"What is a good sampling strategy for traces?"}
+{"user_id":"u28","session_id":"s28","feature":"qa","message":"Should passwords ever be logged?"}
+{"user_id":"u29","session_id":"s29","feature":"summary","message":"Summarize logging best practices"}
+{"user_id":"u30","session_id":"s30","feature":"qa","message":"What is MTTR and how to improve it?"}
+{"user_id":"u31","session_id":"s31","feature":"qa","message":"How to monitor database performance?"}
+{"user_id":"u32","session_id":"s32","feature":"qa","message":"What are golden signals in monitoring?"}
+{"user_id":"u33","session_id":"s33","feature":"summary","message":"Summarize incident management lifecycle"}
+{"user_id":"u34","session_id":"s34","feature":"qa","message":"How to detect anomalies in metrics?"}
+{"user_id":"u35","session_id":"s35","feature":"qa","message":"What is log parsing and why important?"}
+{"user_id":"u36","session_id":"s36","feature":"summary","message":"Explain monitoring architecture briefly"}
+{"user_id":"u37","session_id":"s37","feature":"qa","message":"How to set thresholds for alerts?"}
+{"user_id":"u38","session_id":"s38","feature":"qa","message":"What is tracing span and context?"}
+{"user_id":"u39","session_id":"s39","feature":"qa","message":"How to secure logging systems?"}
+{"user_id":"u40","session_id":"s40","feature":"summary","message":"Summarize data privacy in observability"}
+{"user_id":"u41","session_id":"s41","feature":"qa","message":"How to monitor API latency?"}
+{"user_id":"u42","session_id":"s42","feature":"qa","message":"What are common logging frameworks?"}
+{"user_id":"u43","session_id":"s43","feature":"qa","message":"How to implement structured logging?"}
+{"user_id":"u44","session_id":"s44","feature":"summary","message":"Summarize metrics collection methods"}
+{"user_id":"u45","session_id":"s45","feature":"qa","message":"What is difference between logs and events?"}
+{"user_id":"u46","session_id":"s46","feature":"qa","message":"How to monitor Kubernetes clusters?"}
+{"user_id":"u47","session_id":"s47","feature":"qa","message":"What is observability vs monitoring?"}
+{"user_id":"u48","session_id":"s48","feature":"summary","message":"Explain tracing workflow simply"}
+{"user_id":"u49","session_id":"s49","feature":"qa","message":"How to manage log storage costs?"}
+{"user_id":"u50","session_id":"s50","feature":"qa","message":"What are best alerting tools?"}
+{"user_id":"u51","session_id":"s51","feature":"qa","message":"How to visualize metrics effectively?"}
+{"user_id":"u52","session_id":"s52","feature":"summary","message":"Summarize dashboard design principles"}
+{"user_id":"u53","session_id":"s53","feature":"qa","message":"What are common observability tools?"}
+{"user_id":"u54","session_id":"s54","feature":"qa","message":"How to avoid logging sensitive data?"}
+{"user_id":"u55","session_id":"s55","feature":"qa","message":"What is real-time monitoring?"}
+{"user_id":"u56","session_id":"s56","feature":"summary","message":"Summarize log ingestion process"}
+{"user_id":"u57","session_id":"s57","feature":"qa","message":"How to debug production issues?"}
+{"user_id":"u58","session_id":"s58","feature":"qa","message":"What is service mesh observability?"}
+{"user_id":"u59","session_id":"s59","feature":"qa","message":"How to track user journeys with traces?"}
+{"user_id":"u60","session_id":"s60","feature":"summary","message":"Summarize monitoring and alerting strategy"}
