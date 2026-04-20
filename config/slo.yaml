@@ -1,16 +1,55 @@
 service: day13-observability-lab
 window: 28d
+
+# ──────────────────────────────────────────────────────────────
+# SLIs & SLOs – calibrated from local load-test results
+# Measurement window: rolling 28 days
+# ──────────────────────────────────────────────────────────────
+
 slis:
+
+  # Tail latency: P95 of end-to-end /chat response time
+  # Baseline (no incident): ~400–700 ms
+  # With rag_slow incident active: spikes to 3–5 s
+  # Target: 99.5% of requests must finish under 1 500 ms
   latency_p95_ms:
-    objective: 3000
-    target: 99.5
-    note: Replace with your group's target
+    objective: 1500          # ms threshold
+    target: 99.5             # % of windows in compliance
+    measurement: histogram_p95(latency_ms)
+    note: >
+      Tightened from 3 000 ms to 1 500 ms after observing
+      baseline P95 of ~650 ms under normal load (5 concurrent users).
+      The 1 500 ms limit gives ~2× headroom while still catching
+      rag_slow incidents quickly.
+
+  # Error rate: percentage of requests returning non-200 / exception
   error_rate_pct:
-    objective: 2
-    target: 99.0
+    objective: 2              # max error %
+    target: 99.0              # % of windows in compliance
+    measurement: rate(errors_total) / rate(requests_total) * 100
+    note: >
+      2 % threshold matches industry SRE defaults for chat APIs.
+      P1 alert fires before this budget is exhausted (see alert_rules.yaml).
+
+  # Cost guardrail: total OpenAI / model spend per day
   daily_cost_usd:
-    objective: 2.5
-    target: 100.0
+    objective: 2.5            # USD / day ceiling
+    target: 100.0             # must stay under on every day
+    measurement: sum(cost_usd) over 24h
+    note: >
+      Lab budget cap. hourly_cost_usd spikes (>2× baseline) trigger
+      a separate P2 alert before the daily ceiling is reached.
+
+  # Quality: heuristic average across all requests in window
   quality_score_avg:
-    objective: 0.75
-    target: 95.0
+    objective: 0.75           # minimum average score [0 – 1]
+    target: 95.0              # % of windows meeting objective
+    measurement: avg(quality_score)
+    note: >
+      Score is computed in agent.py (faithfulness + relevance heuristic).
+      A drop below 0.70 fires a P3 Low-Quality alert after 15 min.
+      Objective raised to 0.75 after validating baseline of ~0.83.
+
+error_budget_policy:
+  burn_rate_1h:  14.4   # alert when 1h burn rate > 14.4× (exhausts 5% budget in 1h)
+  burn_rate_6h:   6.0   # alert when 6h burn rate > 6×

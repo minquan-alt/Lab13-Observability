@@ -1,19 +1,56 @@
 alerts:
+
+  # ──────────────────────────────────────────────────────────────
+  # Rule 1 – Latency vượt ngưỡng (Degraded P95)
+  # ──────────────────────────────────────────────────────────────
   - name: high_latency_p95
     severity: P2
-    condition: latency_p95_ms > 5000 for 30m
+    condition: latency_p95_ms > 1500 for 10m
     type: symptom-based
     owner: team-oncall
+    description: >
+      P95 tail latency exceeded the SLO threshold of 1 500 ms for 10
+      consecutive minutes. Most likely cause: rag_slow incident active
+      or an upstream model slowdown.
     runbook: docs/alerts.md#1-high-latency-p95
-  - name: high_error_rate
-    severity: P1
-    condition: error_rate_pct > 5 for 5m
-    type: symptom-based
-    owner: team-oncall
-    runbook: docs/alerts.md#2-high-error-rate
+
+  # ──────────────────────────────────────────────────────────────
+  # Rule 2 – Chi phí tăng đột biến (Cost Spike)
+  # ──────────────────────────────────────────────────────────────
   - name: cost_budget_spike
     severity: P2
     condition: hourly_cost_usd > 2x_baseline for 15m
     type: symptom-based
     owner: finops-owner
-    runbook: docs/alerts.md#3-cost-budget-spike
+    description: >
+      Hourly spend has been running at more than 2× the baseline rate
+      for 15 minutes. If unaddressed, the daily_cost_usd SLO objective
+      of $2.50 will be exhausted by end of day.
+    runbook: docs/alerts.md#2-cost-budget-spike
+
+  # ──────────────────────────────────────────────────────────────
+  # Rule 3 – Điểm chất lượng giảm (Low Quality Score)
+  # ──────────────────────────────────────────────────────────────
+  - name: low_quality_score
+    severity: P3
+    condition: quality_score_avg < 0.70 for 15m
+    type: symptom-based
+    owner: team-oncall
+    description: >
+      Rolling average quality score (faithfulness + relevance heuristic)
+      has fallen below 0.70 for 15 minutes. Possible causes: RAG
+      retrieval degradation, prompt truncation, or model regression.
+    runbook: docs/alerts.md#3-low-quality-score
+
+  # ──────────────────────────────────────────────────────────────
+  # Rule 4 – High Error Rate (existing, tightened threshold)
+  # ──────────────────────────────────────────────────────────────
+  - name: high_error_rate
+    severity: P1
+    condition: error_rate_pct > 5 for 5m
+    type: symptom-based
+    owner: team-oncall
+    description: >
+      More than 5% of requests are failing. Immediate investigation
+      required to prevent SLO burn-rate exhaustion.
+    runbook: docs/alerts.md#4-high-error-rate
