@@ -3,7 +3,7 @@
 > **Instruction**: Fill in all sections below. This report is designed to be parsed by an automated grading assistant. Ensure all tags (e.g., `[GROUP_NAME]`) are preserved.
 
 ## 1. Team Metadata
-- [GROUP_NAME]: C401.A2
+- [GROUP_NAME]: C401 A2
 - [REPO_URL]: 
 - [MEMBERS]:
   - Member A: [Name] | Role: Logging & PII
