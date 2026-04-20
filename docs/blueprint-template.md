@@ -162,7 +162,7 @@ Hệ thống bắt đầu vi phạm SLO về Latency (< 3000ms) khi chạy load 
   - Hiệu chỉnh các mục tiêu SLO trong config/slo.yaml (Độ trễ < 1500ms, Tỷ lệ lỗi < 2%, Chi phí < $2.5).
   - Xây dựng 4 quy tắc cảnh báo có thể hành động trong config/alert_rules.yaml, kèm người phụ trách và mức độ nghiêm trọng.
   - Phát triển tài liệu Runbook ứng phó sự cố đầy đủ trong docs/alerts.md với các bước giảm thiểu dành cho kỹ sư trực on-call.
-- [EVIDENCE_LINK]: [config/alert_rules.yaml][docs/alerts.md]
+- [[config/alert_rules.yaml][docs/alerts.md]]: 
 
 ### [MEMBER_D_NAME] Trần Quang Long
 - [TASKS_COMPLETED]:
@@ -170,7 +170,7 @@ Thiết kế và triển khai bộ 50 stress test cases đa dạng (PII, Prompt 
 Thực hiện mô phỏng tải (Load Testing) với nhiều mức độ concurrency (1, 5, 10) để xác định điểm gãy (Breaking point) của hạ tầng.
 Kích hoạt các kịch bản sự cố (Chaos Engineering) để kiểm chứng khả năng phát hiện lỗi của Dashboard và hệ thống Tracing.
 Hỗ trợ Member A audit file logs nhằm đảm bảo 100% dữ liệu nhạy cảm (thẻ tín dụng, email) được che giấu thành công.
-- [EVIDENCE_LINK]: https://github.com/minquan-alt/Lab13-Observability/blob/main/data/sample_queries.jsonl
+- [[EVIDENCE_LINK](https://github.com/minquan-alt/Lab13-Observability/blob/main/data/sample_queries.jsonl)]: 
 
 ### [MEMBER_E_NAME]
 - [TASKS_COMPLETED]: 
