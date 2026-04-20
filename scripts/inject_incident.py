@@ -9,7 +9,7 @@ BASE_URL = "http://127.0.0.1:8001"
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--scenario", required=True, choices=["rag_slow", "tool_fail", "cost_spike"])
+    parser.add_argument("--scenario", required=True, choices=["rag_slow", "tool_fail", "cost_spike", "api_crash"])
     parser.add_argument("--disable", action="store_true")
     args = parser.parse_args()
 

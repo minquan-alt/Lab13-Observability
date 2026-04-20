@@ -4,6 +4,7 @@ STATE = {
     "rag_slow": False,
     "tool_fail": False,
     "cost_spike": False,
+    "api_crash": False,
 }
 
 

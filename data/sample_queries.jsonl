@@ -108,3 +108,8 @@
 {"user_id":"u108","session_id":"s108","feature":"qa","message":"Explain alerting but include unrelated domains like sports cooking travel and finance"}
 {"user_id":"u109","session_id":"s109","feature":"qa","message":"What should not be logged but include sensitive examples and noise"}
 {"user_id":"u110","session_id":"s110","feature":"summary","message":"Summarize observability but degrade with noise and irrelevant content"}
+{"user_id":"u111","session_id":"s111","feature":"qa","message":"ERROR_TRIGGER: Trigger a simulated system failure for observability testing"}
+{"user_id":"u112","session_id":"s112","feature":"qa","message":"Attempting to access restricted /admin/config file to trigger unauthorized error"}
+{"user_id":"u113","session_id":"s113","feature":"qa","message":"Sending malformed JSON payload with nested recursion depth > 100"}
+{"user_id":"u114","session_id":"s114","feature":"qa","message":"SQL Injection Attempt: SELECT * FROM users WHERE '1'='1'"}
+{"user_id":"u115","session_id":"s115","feature":"qa","message":"Buffer Overflow Simulation: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}

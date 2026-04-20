@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import random
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -52,6 +53,11 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
             model=body.model or agent.model,
             env=os.getenv("APP_ENV", "dev"),
         )
+
+        # 🚨 SIMULATED API CRASH INCIDENT
+        if status().get("api_crash"):
+            if random.random() < 0.4:
+                raise RuntimeError("Critical API failure detected (Simulated Incident)")
 
         log.info(   
             "request_received",
