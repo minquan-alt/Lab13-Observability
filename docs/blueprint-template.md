@@ -10,36 +10,44 @@
   - Member B: [Name] Đỗ Lê Thành Nhân | Role: Tracing & Enrichment
   - Member C: [Name] Nguyễn Anh Tài | Role: SLO & Alerts
   - Member D: [Name] Trần Quang Long | Role: Load Test & Dashboard
-  - Member E: [Name] | Role: Demo & Report
+  - Member E: [Name] Nguyễn Công Quốc Huy| Role: Dashboard & Evidence
 
 ---
 
 ## 2. Group Performance (Auto-Verified)
-- [VALIDATE_LOGS_FINAL_SCORE]: /100
-- [TOTAL_TRACES_COUNT]: 
-- [PII_LEAKS_FOUND]: 
+- [VALIDATE_LOGS_FINAL_SCORE] 100/100
+
+--- Lab Verification Results ---
+Total log records analyzed: 1498
+Records with missing required fields: 0
+Records with missing enrichment (context): 0
+Unique correlation IDs found: 708
+Potential PII leaks detected: 0
+
+--- Grading Scorecard (Estimates) ---
++ [PASSED] Basic JSON schema
++ [PASSED] Correlation ID propagation
++ [PASSED] Log enrichment
++ [PASSED] PII scrubbing
+
+Estimated Score: 100/100
 
 ---
 
 ## 3. Technical Evidence (Group)
 
 ### 3.1 Logging & Tracing
-- [EVIDENCE_CORRELATION_ID_SCREENSHOT]: [Path to image]
-- [EVIDENCE_PII_REDACTION_SCREENSHOT]: [Path to image]
-- [EVIDENCE_TRACE_WATERFALL_SCREENSHOT]: [Path to image]
-- [TRACE_WATERFALL_EXPLANATION]: (Briefly explain one interesting span in your trace)
+- [EVIDENCE_CORRELATION_ID_SCREENSHOT](screenshots\langfuse_1.png)
+- [EVIDENCE_PII_REDACTION_SCREENSHOT](screenshots\langfuse_2.png)
+- [EVIDENCE_TRACE_WATERFALL_SCREENSHOT](screenshots\langfuse_3.png)
+- [TRACE_WATERFALL_EXPLANATION](screenshots\langfuse_3.png)
 
 ### 3.2 Dashboard & SLOs
-- [DASHBOARD_6_PANELS_SCREENSHOT]: [Path to image]
-- [SLO_TABLE]:
-| SLI         |     Target | Window | Current Value |
-| ----------- | ---------: | ------ | ------------: |
-| Latency P95 |   < 3000ms | 28d    |               |
-| Error Rate  |       < 2% | 28d    |               |
-| Cost Budget | < $2.5/day | 1d     |               |
+- [DASHBOARD_6_PANELS_SCREENSHOT](screenshots\dashboard-1.jpeg)
+
 
 ### 3.3 Alerts & Runbook
-- [ALERT_RULES_SCREENSHOT]: [Path to image]
+- [ALERT_RULES_SCREENSHOT](screenshots\dashboard-1.jpeg)
 ```
 alerts:
   # ──────────────────────────────────────────────────────────────
@@ -184,13 +192,19 @@ Kích hoạt các kịch bản sự cố (Chaos Engineering) để kiểm chứn
 Hỗ trợ Member A audit file logs nhằm đảm bảo 100% dữ liệu nhạy cảm (thẻ tín dụng, email) được che giấu thành công.
 - [[EVIDENCE_LINK](https://github.com/minquan-alt/Lab13-Observability/blob/main/data/sample_queries.jsonl)]: 
 
-### [MEMBER_E_NAME]
+### [MEMBER_E_NAME] Nguyễn Công Quốc Huy
 - [TASKS_COMPLETED]: 
-- [EVIDENCE_LINK]: shown in class, group got bonus point
+Thiết kế và triển khai dashboard observability gồm 6 panels chính:
+  - Traffic (Request volume)
+  - Error Rate
+  - Latency (P50, P95, P99)
+  - Cost (average & total)
+  - Quality score
+  - Total Errors
+Xây dựng UI dashboard bằng FastAPI + HTML + Chart.js:
+  - Tạo endpoint /dashboard
+  - Render giao diện trực tiếp từ backend (không cần frontend riêng)
+  - Thiết kế layout dạng grid + section (System / Performance / Cost)
+- [EVIDENCE_LINK](screenshots/dashboard-1.jpeg)
 
 ---
-
-## 6. Bonus Items (Optional)
-- [BONUS_COST_OPTIMIZATION]: (Description + Evidence)
-- [BONUS_AUDIT_LOGS]: (Description + Evidence)
-- [BONUS_CUSTOM_METRIC]: (Description + Evidence)
