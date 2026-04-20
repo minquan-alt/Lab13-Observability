@@ -438,12 +438,11 @@ async def dashboard():
                         chart.options.scales.x.stacked = false;
                         chart.options.scales.y.stacked = false;
                     } else {
-                        // FALLBACK if tokens_in_by_day doesn't exist yet in metrics.py
                         const tIn = data.tokens_in_by_day || {};
                         const tOut = data.tokens_out_by_day || {};
                         chart.data.datasets = [
-                            { label: "Tokens In", data: days.map(d => tIn[d] || (data.tokens_in_total/7 || 0)), backgroundColor: '#10b981', borderRadius: 4 },
-                            { label: "Tokens Out", data: days.map(d => tOut[d] || (data.tokens_out_total/7 || 0)), backgroundColor: '#8b5cf6', borderRadius: 4 }
+                            { label: "Tokens In", data: days.map(d => tIn[d] || 0), backgroundColor: '#10b981', borderRadius: 4 },
+                            { label: "Tokens Out", data: days.map(d => tOut[d] || 0), backgroundColor: '#8b5cf6', borderRadius: 4 }
                         ];
                         chart.options.scales.x.stacked = true;
                         chart.options.scales.y.stacked = true;
@@ -461,7 +460,7 @@ async def dashboard():
 
                         let badgeClass = firing ? `badge-${rule.severity.toLowerCase()}` : 'badge-ok';
                         let statusText = firing ? `🔴 FIRING` : `✅ OK`;
-                        let runbookHtml = firing ? `<a class="runbook" href="${rule.runbook}" target="_blank">📖 Runbook</a>` : `—`;
+                        let runbookHtml = firing ? `<a class="runbook" href="https://github.com/minquan-alt/Lab13-Observability/blob/main/${rule.runbook}" target="_blank">📖 Runbook</a>` : `—`;
 
                         return `<tr>
                             <td><strong>${rule.label}</strong></td>
