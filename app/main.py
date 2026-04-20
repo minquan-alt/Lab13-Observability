@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import random
+from dotenv import load_dotenv
+load_dotenv()
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse

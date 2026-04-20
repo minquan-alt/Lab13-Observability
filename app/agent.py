@@ -4,6 +4,9 @@ import json
 import os
 import time
 from dataclasses import dataclass
+from typing import List, Optional
+from pydantic import BaseModel
+from langfuse import get_client
 
 from . import metrics
 from .mock_llm import FakeLLM
@@ -29,56 +32,60 @@ class LabAgent:
         self.model = model
         self.llm = FakeLLM(model=model)
 
-    @observe()
     def run(self, user_id: str, feature: str, session_id: str, message: str) -> AgentResult:
-        started = time.perf_counter()
-        docs = retrieve(message)
-        prompt = f"Feature={feature}\nDocs={docs}\nQuestion={message}"
-        response = self.llm.generate(prompt)
+        client = get_client()
+        # Start a span manually to ensure it is linked to the trace
+        with client.start_as_current_span(
+            name="Agent Run",
+            input={"message": message},
+        ) as root_span:
+            # Update trace level attributes
+            client.update_current_trace(
+                user_id=hash_user_id(user_id),
+                session_id=session_id,
+                metadata={"feature": feature, "model": self.model}
+            )
+            started = time.perf_counter()
+            docs = retrieve(message)
+            
+            response = self.llm.generate(
+                prompt=f"Context: {docs}\nQuestion: {message}"
+            )
+            
+            latency_ms = (time.perf_counter() - started) * 1000
+            cost_usd = (response.usage.input_tokens * 0.01 + response.usage.output_tokens * 0.03) / 1000
+            quality_score = self._heuristic_quality(message, response.text, docs)
 
-        quality_score = self._heuristic_quality(message, response.text, docs)
-        relevancy_score = round(0.8 if any(doc[:20].lower() in response.text.lower() for doc in docs) else 0.4, 2)
-        faithfulness_score = round(0.9 if len(docs) > 0 and len(response.text) > 20 else 0.5, 2)
+            root_span.update(
+                output={"answer": response.text},
+                metadata={"quality_score": quality_score}
+            )
 
-        latency_ms = int((time.perf_counter() - started) * 1000)
-        cost_usd = self._estimate_cost(response.usage.input_tokens, response.usage.output_tokens)
+            langfuse_context.score(
+                name="quality",
+                value=quality_score,
+                comment="Heuristic quality score",
+            )
+            langfuse_context.flush()
 
-        # Langfuse trace + scores
-        langfuse_context.update_current_trace(
-            user_id=hash_user_id(user_id),
-            session_id=session_id,
-            tags=["lab", feature, self.model],
-        )
-        langfuse_context.update_current_observation(
-            metadata={"doc_count": len(docs), "query_preview": summarize_text(message)},
-            usage_details={"input": response.usage.input_tokens, "output": response.usage.output_tokens},
-        )
-        langfuse_context.score(
-            name="quality",
-            value=quality_score,
-            comment="Heuristic quality score",
-        )
-        langfuse_context.score(name="relevancy", value=relevancy_score)
-        langfuse_context.score(name="faithfulness", value=faithfulness_score)
+            metrics.record_request(
+                latency_ms=latency_ms,
+                cost_usd=cost_usd,
+                tokens_in=response.usage.input_tokens,
+                tokens_out=response.usage.output_tokens,
+                quality_score=quality_score,
+            )
 
-        metrics.record_request(
-            latency_ms=latency_ms,
-            cost_usd=cost_usd,
-            tokens_in=response.usage.input_tokens,
-            tokens_out=response.usage.output_tokens,
-            quality_score=quality_score,
-        )
-
-        result = AgentResult(
-            answer=response.text,
-            latency_ms=latency_ms,
-            tokens_in=response.usage.input_tokens,
-            tokens_out=response.usage.output_tokens,
-            cost_usd=cost_usd,
-            quality_score=quality_score,
-            relevancy_score=relevancy_score,
-            faithfulness_score=faithfulness_score,
-        )
+            result = AgentResult(
+                answer=response.text,
+                latency_ms=int(latency_ms),
+                tokens_in=response.usage.input_tokens,
+                tokens_out=response.usage.output_tokens,
+                cost_usd=cost_usd,
+                quality_score=quality_score,
+                relevancy_score=0.0,
+                faithfulness_score=0.0,
+            )
 
         self._persist_trace(user_id, feature, session_id, message, result)
         return result

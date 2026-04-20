@@ -8,8 +8,12 @@ load_dotenv()
 
 try:
     from langfuse import observe, get_client
+    from langfuse.client import Langfuse
     
     class _LangfuseContextShim:
+        def __init__(self):
+            self._current_span = None
+
         def update_current_trace(self, **kwargs: Any) -> None:
             client = get_client()
             if client:
@@ -19,14 +23,22 @@ try:
             client = get_client()
             if client:
                 try:
-                    client.update_current_generation(**kwargs)
-                except Exception:
                     client.update_current_span(**kwargs)
+                except Exception:
+                    try:
+                        client.update_current_generation(**kwargs)
+                    except Exception:
+                        pass
 
         def score(self, **kwargs: Any) -> None:
             client = get_client()
             if client:
                 client.score_current_trace(**kwargs)
+
+        def flush(self) -> None:
+            client = get_client()
+            if client:
+                client.flush()
 
     langfuse_context = _LangfuseContextShim()
 
@@ -35,6 +47,14 @@ except Exception:  # pragma: no cover
         def decorator(func):
             return func
         return decorator
+    
+    class _EmptyShim:
+        def update_current_trace(self, **kwargs: Any) -> None: pass
+        def update_current_observation(self, **kwargs: Any) -> None: pass
+        def score(self, **kwargs: Any) -> None: pass
+        def flush(self) -> None: pass
+
+    langfuse_context = _EmptyShim()
 
     class _DummyContext:
         def update_current_trace(self, **kwargs: Any) -> None:
