@@ -32,11 +32,11 @@
 ### 3.2 Dashboard & SLOs
 - [DASHBOARD_6_PANELS_SCREENSHOT]: [Path to image]
 - [SLO_TABLE]:
-| SLI | Target | Window | Current Value |
-|---|---:|---|---:|
-| Latency P95 | < 3000ms | 28d | |
-| Error Rate | < 2% | 28d | |
-| Cost Budget | < $2.5/day | 1d | |
+| SLI         |     Target | Window | Current Value |
+| ----------- | ---------: | ------ | ------------: |
+| Latency P95 |   < 3000ms | 28d    |               |
+| Error Rate  |       < 2% | 28d    |               |
+| Cost Budget | < $2.5/day | 1d     |               |
 
 ### 3.3 Alerts & Runbook
 - [ALERT_RULES_SCREENSHOT]: [Path to image]
@@ -59,9 +59,15 @@
 - [TASKS_COMPLETED]: 
 - [EVIDENCE_LINK]: (Link to specific commit or PR)
 
-### [MEMBER_B_NAME]
-- [TASKS_COMPLETED]: 
-- [EVIDENCE_LINK]: 
+### [MEMBER_B_NAME]: Đỗ Lê Thành Nhân
+- [TASKS_COMPLETED]:
+  - Cấu hình hệ thống: Hoàn tất cài đặt và xác minh API Key (PUBLIC_KEY, SECRET_KEY) và LANGFUSE_HOST trong file .env. Đảm bảo SDK v3 kết nối an toàn tới Langfuse Cloud.
+  - Hoàn thiện Tracing Framework
+  - Xây dựng Child Spans (Cây Tracing): Triển khai Decorator @observe đồng bộ trên toàn bộ pipeline: mock_rag.py (loại span) và mock_llm.py (loại generation). Kết quả là UI Langfuse hiển thị mô hình cây (Tree structure) trực quan, cho thấy rõ thời gian xử lý của từng bước RAG và LLM.
+  - Log Feedback & Quality: Tích hợp thành công cơ chế chấm điểm tự động. Mỗi yêu cầu của Agent đều được tính toán quality_score và đẩy trực tiếp lên Langfuse UI bằng langfuse_context.score(), cho phép theo dõi chất lượng câu trả lời theo thời gian thực.
+
+- [EVIDENCE_LINK]:
+Các [file](app/agent.py), [file](app/tracing.py), [file](app/mock_llm.py) đã được commit và rebase thành công lên nhánh chính.
 
 ### [MEMBER_C_NAME]
 - [TASKS_COMPLETED]: 
@@ -69,7 +75,8 @@
 
 ### [MEMBER_D_NAME]
 - [TASKS_COMPLETED]: 
-- [EVIDENCE_LINK]: 
+- [EVIDENCE_LINK]:
+
 
 ### [MEMBER_E_NAME]
 - [TASKS_COMPLETED]: 

@@ -9,11 +9,11 @@
 
 Observability không chỉ là việc *thu thập* dữ liệu – quan trọng hơn là *biết khi nào* hệ thống đang gặp vấn đề. Member C chịu trách nhiệm xây dựng tầng "cảnh báo sớm" gồm 3 phần:
 
-| Task | File | Mục tiêu |
-|---|---|---|
-| **C.1** | `config/slo.yaml` | Định nghĩa ngưỡng kỳ vọng (SLO) dựa trên thực tế |
-| **C.2** | `config/alert_rules.yaml` | Tạo 3+ rules tự động cảnh báo khi vi phạm SLO |
-| **C.3** | `docs/alerts.md` | Viết Runbook hướng dẫn xử lý từng loại alert |
+| Task    | File                      | Mục tiêu                                         |
+| ------- | ------------------------- | ------------------------------------------------ |
+| **C.1** | `config/slo.yaml`         | Định nghĩa ngưỡng kỳ vọng (SLO) dựa trên thực tế |
+| **C.2** | `config/alert_rules.yaml` | Tạo 3+ rules tự động cảnh báo khi vi phạm SLO    |
+| **C.3** | `docs/alerts.md`          | Viết Runbook hướng dẫn xử lý từng loại alert     |
 
 ---
 
@@ -36,12 +36,12 @@ Ví dụ trong lab này:
 
 Hệ thống lab sử dụng 4 SLI chính, được đo trong `app/metrics.py`:
 
-| SLI | Cách đo | Nơi ghi |
-|---|---|---|
-| `latency_p95_ms` | `percentile(REQUEST_LATENCIES, 95)` | `record_request()` |
-| `error_rate_pct` | `ERRORS` counter / `TRAFFIC` | `record_error()` |
-| `daily_cost_usd` | `sum(REQUEST_COSTS)` | `record_request()` |
-| `quality_score_avg` | `mean(QUALITY_SCORES)` | `record_request()` |
+| SLI                 | Cách đo                             | Nơi ghi            |
+| ------------------- | ----------------------------------- | ------------------ |
+| `latency_p95_ms`    | `percentile(REQUEST_LATENCIES, 95)` | `record_request()` |
+| `error_rate_pct`    | `ERRORS` counter / `TRAFFIC`        | `record_error()`   |
+| `daily_cost_usd`    | `sum(REQUEST_COSTS)`                | `record_request()` |
+| `quality_score_avg` | `mean(QUALITY_SCORES)`              | `record_request()` |
 
 ### 2.3 Alert Rules là gì?
 
@@ -265,12 +265,12 @@ Mỗi alert có một section với cấu trúc chuẩn:
 
 Thêm bảng tổng hợp để on-call engineer *không cần đọc toàn bộ* khi đang khẩn cấp:
 
-| Alert | Panel Dashboard | Script kiểm tra | Hành động đầu tiên |
-|---|---|---|---|
-| `high_latency_p95` | Panel 2 (Latency) | `validate_logs.py \| grep latency` | Kiểm tra incident `rag_slow` |
-| `cost_budget_spike` | Panel 4 (Cost) | `validate_logs.py \| grep cost` | Tắt incident `cost_spike` |
-| `low_quality_score` | Panel 6 (Quality) | `validate_logs.py \| grep quality` | Kiểm tra RAG trả về rỗng |
-| `high_error_rate` | Panel 3 (Errors) | `validate_logs.py \| grep error` | Xem exception trong Langfuse |
+| Alert               | Panel Dashboard   | Script kiểm tra                    | Hành động đầu tiên           |
+| ------------------- | ----------------- | ---------------------------------- | ---------------------------- |
+| `high_latency_p95`  | Panel 2 (Latency) | `validate_logs.py \| grep latency` | Kiểm tra incident `rag_slow` |
+| `cost_budget_spike` | Panel 4 (Cost)    | `validate_logs.py \| grep cost`    | Tắt incident `cost_spike`    |
+| `low_quality_score` | Panel 6 (Quality) | `validate_logs.py \| grep quality` | Kiểm tra RAG trả về rỗng     |
+| `high_error_rate`   | Panel 3 (Errors)  | `validate_logs.py \| grep error`   | Xem exception trong Langfuse |
 
 ---
 
@@ -302,11 +302,11 @@ Member F (Demo)
 
 ### Files đã chỉnh sửa / tạo mới
 
-| File | Trạng thái | Nội dung chính |
-|---|---|---|
-| [`config/slo.yaml`](../config/slo.yaml) | ✅ Cập nhật | 4 SLIs với giá trị thật + error budget policy |
-| [`config/alert_rules.yaml`](../config/alert_rules.yaml) | ✅ Cập nhật | 4 alert rules (3 mới + 1 cải tiến) |
-| [`docs/alerts.md`](./alerts.md) | ✅ Cập nhật | Runbook đầy đủ 4 sections + Quick Reference |
+| File                                                    | Trạng thái | Nội dung chính                                |
+| ------------------------------------------------------- | ---------- | --------------------------------------------- |
+| [`config/slo.yaml`](../config/slo.yaml)                 | ✅ Cập nhật | 4 SLIs với giá trị thật + error budget policy |
+| [`config/alert_rules.yaml`](../config/alert_rules.yaml) | ✅ Cập nhật | 4 alert rules (3 mới + 1 cải tiến)            |
+| [`docs/alerts.md`](./alerts.md)                         | ✅ Cập nhật | Runbook đầy đủ 4 sections + Quick Reference   |
 
 ### Checklist theo rubric
 
@@ -353,11 +353,11 @@ A: Trong lab này, Runbook là tài liệu hướng dẫn thủ công. Trong pro
 
 Tạo 3 panel bổ sung vào Dashboard của Member E:
 
-| Panel | Metric | Mục đích |
-|---|---|---|
-| **Total cost (7-day rolling)** | `sum(cost_usd) over 7d` | Thấy xu hướng tăng/giảm theo tuần |
-| **Cost per 1k requests** | `total_cost / traffic * 1000` | Chuẩn hóa theo lưu lượng |
-| **Top 10 users by cost (%)** | `cost_by_user / total_cost * 100` | Xác định user "đốt tiền" nhất |
+| Panel                          | Metric                            | Mục đích                          |
+| ------------------------------ | --------------------------------- | --------------------------------- |
+| **Total cost (7-day rolling)** | `sum(cost_usd) over 7d`           | Thấy xu hướng tăng/giảm theo tuần |
+| **Cost per 1k requests**       | `total_cost / traffic * 1000`     | Chuẩn hóa theo lưu lượng          |
+| **Top 10 users by cost (%)**   | `cost_by_user / total_cost * 100` | Xác định user "đốt tiền" nhất     |
 
 #### Alert Slack/Teams bổ sung
 
@@ -456,11 +456,11 @@ def is_cost_anomaly(daily_costs: list[float], today: float, threshold_z: float =
 ```
 
 **So sánh với cách cũ**:
-| Cách | Ưu điểm | Nhược điểm |
-|---|---|---|
-| Fixed threshold (`> $0.10/hr`) | Đơn giản, dễ hiểu | Không thích nghi với growth – false positive nhiều khi traffic tăng |
-| Z-score (≥ 2.5σ) | Tự động thích nghi, ít false positive | Cần ≥ 7 ngày data để hoạt động |
-| Prophet (Facebook) | Bắt được seasonality (cuối tuần vs ngày thường) | Phức tạp hơn, cần train model |
+| Cách                           | Ưu điểm                                         | Nhược điểm                                                          |
+| ------------------------------ | ----------------------------------------------- | ------------------------------------------------------------------- |
+| Fixed threshold (`> $0.10/hr`) | Đơn giản, dễ hiểu                               | Không thích nghi với growth – false positive nhiều khi traffic tăng |
+| Z-score (≥ 2.5σ)               | Tự động thích nghi, ít false positive           | Cần ≥ 7 ngày data để hoạt động                                      |
+| Prophet (Facebook)             | Bắt được seasonality (cuối tuần vs ngày thường) | Phức tạp hơn, cần train model                                       |
 
 #### Budget Guardrails (Phòng thủ hard limit)
 
