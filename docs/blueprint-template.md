@@ -140,7 +140,8 @@ alerts:
 
 ```
 
-- [SAMPLE_RUNBOOK_LINK]: [docs/alerts.md#1-high-latency-p95] [docs/alerts.md#L3]
+- [SAMPLE_RUNBOOK_LINK]: [High Latency P95](alerts.md#1-high-latency-p95) |
+  [Xem dòng L3](alerts.md#L3)
 
 ---
 
@@ -172,7 +173,9 @@ alerts:
   - Hiệu chỉnh các mục tiêu SLO trong config/slo.yaml (Độ trễ < 1500ms, Tỷ lệ lỗi < 2%, Chi phí < $2.5).
   - Xây dựng 4 quy tắc cảnh báo có thể hành động trong config/alert_rules.yaml, kèm người phụ trách và mức độ nghiêm trọng.
   - Phát triển tài liệu Runbook ứng phó sự cố đầy đủ trong docs/alerts.md với các bước giảm thiểu dành cho kỹ sư trực on-call.
-- [EVIDENCE_LINK]: [config/alert_rules.yaml][docs/alerts.md][config/slo.yaml]
+- [EVIDENCE_LINK]: [config/alert_rules.yaml](../config/alert_rules.yaml) |
+  [docs/alerts.md](alerts.md) |
+  [config/slo.yaml](../config/slo.yaml)
 
 ### [MEMBER_D_NAME]
 
