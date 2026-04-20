@@ -56,17 +56,5 @@ except Exception:  # pragma: no cover
 
     langfuse_context = _EmptyShim()
 
-    class _DummyContext:
-        def update_current_trace(self, **kwargs: Any) -> None:
-            return None
-
-        def update_current_observation(self, **kwargs: Any) -> None:
-            return None
-
-        def score(self, **kwargs: Any) -> None:
-            return None
-
-    langfuse_context = _DummyContext()
-
 def tracing_enabled() -> bool:
     return bool(os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY"))
