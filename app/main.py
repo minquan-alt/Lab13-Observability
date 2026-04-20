@@ -12,7 +12,7 @@ from structlog.contextvars import bind_contextvars
 from .agent import LabAgent
 from .incidents import disable, enable, status
 from .logging_config import configure_logging, get_logger
-from .metrics import record_error, snapshot
+from .metrics import record_detailed_error, record_error, snapshot
 from .middleware import CorrelationIdMiddleware
 from .pii import hash_user_id, summarize_text
 from .schemas import ChatRequest, ChatResponse
@@ -91,9 +91,31 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
             cost_usd=result.cost_usd,
             quality_score=result.quality_score,
         )
+    except ValueError as exc:
+        # 🛡️ GUARDRAIL VIOLATION — return 400, not 500
+        error_type = "GuardrailViolation"
+        record_error(error_type)
+        record_detailed_error(
+            error_type=error_type,
+            detail=str(exc),
+            message_preview=summarize_text(body.message),
+            correlation_id=request.state.correlation_id
+        )
+        log.warning(
+            "guardrail_triggered",
+            service="api",
+            payload={"detail": str(exc), "message_preview": summarize_text(body.message)},
+        )
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # pragma: no cover
         error_type = type(exc).__name__
         record_error(error_type)
+        record_detailed_error(
+            error_type=error_type,
+            detail=str(exc),
+            message_preview=summarize_text(body.message),
+            correlation_id=request.state.correlation_id
+        )
         log.error(
             "request_failed",
             service="api",
@@ -244,6 +266,62 @@ async def dashboard():
                 color: white;
                 border-color: #3b82f6;
             }
+
+            /* ── ERROR LOGS ─────────────────────────────────── */
+            .error-logs-container {
+                background: #1e293b;
+                border-radius: 10px;
+                margin-top: 30px;
+                overflow: hidden;
+            }
+
+            .error-logs-header {
+                padding: 16px;
+                background: #334155;
+                cursor: pointer;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                user-select: none;
+            }
+
+            .error-logs-header:hover { background: #475569; }
+
+            .error-logs-content {
+                display: none;
+                padding: 16px;
+                max-height: 400px;
+                overflow-y: auto;
+            }
+
+            .error-logs-content.show { display: block; }
+
+            .error-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 13px;
+            }
+
+            .error-table th {
+                text-align: left;
+                color: #94a3b8;
+                border-bottom: 1px solid #475569;
+                padding: 8px;
+            }
+
+            .error-table td {
+                padding: 10px 8px;
+                border-bottom: 1px solid #334155;
+                vertical-align: top;
+            }
+
+            .trace-id {
+                font-family: monospace;
+                color: #38bdf8;
+                font-size: 11px;
+            }
+
+            .error-msg { color: #f87171; font-style: italic; }
         </style>
     </head>
 
@@ -290,6 +368,10 @@ async def dashboard():
                 <div>Total Errors</div>
                 <div class="value" id="errors">-</div>
             </div>
+            <div class="card" id="card-guardrail">
+                <div>🛡️ Guardrail Violations</div>
+                <div class="value" id="guardrail_violations">-</div>
+            </div>
         </div>
 
         <!-- CHART & TOGGLES -->
@@ -297,8 +379,32 @@ async def dashboard():
             <button id="btnTraffic" class="active">Traffic Volume</button>
             <button id="btnTokens">Token Usage</button>
         </div>
+
         <div class="chart-container">
-            <canvas id="mainChart"></canvas>
+            <canvas id="trafficChart"></canvas>
+        </div>
+
+        <!-- ERROR LOGS (NEW) -->
+        <div class="error-logs-container">
+            <div class="error-logs-header" id="errorLogsHeader">
+                <h3 style="margin:0; font-size: 16px;">📋 Recent Error Logs (Trace Entries)</h3>
+                <span id="errorLogsStatus">Click to Expand 🔽</span>
+            </div>
+            <div class="error-logs-content" id="errorLogsContent">
+                <table class="error-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Time</th>
+                            <th style="width: 120px;">Type</th>
+                            <th>Detail / Trace Message</th>
+                            <th style="width: 150px;">Correlation ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="errorLogsBody">
+                        <!-- Polled by JS -->
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- PERFORMANCE -->
@@ -321,7 +427,7 @@ async def dashboard():
             let currentMode = "traffic"; // "traffic" or "tokens"
 
             // ── Chart.js setup ────────────────────────────────
-            const ctx = document.getElementById('mainChart').getContext('2d');
+            const ctx = document.getElementById('trafficChart').getContext('2d');
             const chart = new Chart(ctx, {
                 type: 'bar',
                 data: { labels: [], datasets: [] },
@@ -431,6 +537,15 @@ async def dashboard():
                     document.getElementById("cost").innerText = '$' + (data.total_cost_usd ?? 0).toFixed(4);
                     document.getElementById("quality").innerText = (data.quality_avg ?? 0).toFixed(3);
 
+                    // 🛡️ Guardrail Violations
+                    const gv = data.guardrail_violations ?? 0;
+                    document.getElementById("guardrail_violations").innerText = gv;
+                    const cardGr = document.getElementById("card-guardrail");
+                    if (cardGr) {
+                        cardGr.className = "card " + (gv > 0 ? "alert-p2" : "ok");
+                        document.getElementById("guardrail_violations").className = "value " + (gv > 0 ? "yellow" : "green");
+                    }
+
                     // ── Chart Update ──────────────────────────
                     const days = getLast7Days();
                     chart.data.labels = days;
@@ -483,6 +598,21 @@ async def dashboard():
                     document.getElementById("alert-rows").innerHTML = rows;
                     document.getElementById("alert-banner").style.display = hasP1 ? 'block' : 'none';
 
+                    // ── Error Logs Update ──────────────────────
+                    const errorLogs = data.recent_errors || [];
+                    const errorRows = errorLogs.map(err => `
+                        <tr>
+                            <td><span style="color:#94a3b8">${err.ts}</span></td>
+                            <td><span class="badge ${err.type === 'GuardrailViolation' ? 'badge-p2' : 'badge-p1'}">${err.type}</span></td>
+                            <td>
+                                <div class="error-msg">${err.detail}</div>
+                                <div style="font-size:11px; color:#64748b; margin-top:4px;">Message: "${err.message}"</div>
+                            </td>
+                            <td class="trace-id">${err.correlation_id}</td>
+                        </tr>
+                    `).join('');
+                    document.getElementById("errorLogsBody").innerHTML = errorRows || '<tr><td colspan="4" style="text-align:center; padding:20px; color:#64748b;">No recent errors logged.</td></tr>';
+
                 } catch (e) {
                     console.error("Dashboard error:", e);
                 }
@@ -500,6 +630,16 @@ async def dashboard():
                 document.getElementById("btnTokens").classList.add("active");
                 document.getElementById("btnTraffic").classList.remove("active");
                 updateDashboard();
+            };
+
+            // ── Error Logs Toggle ───────────────────────────
+            const header = document.getElementById("errorLogsHeader");
+            const content = document.getElementById("errorLogsContent");
+            const status = document.getElementById("errorLogsStatus");
+
+            header.onclick = () => {
+                const isShowing = content.classList.toggle("show");
+                status.innerText = isShowing ? "Click to Collapse 🔼" : "Click to Expand 🔽";
             };
 
             setInterval(updateDashboard, 3000);

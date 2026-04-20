@@ -10,6 +10,8 @@ REQUEST_TOKENS_OUT: list[int] = []
 ERRORS: Counter[str] = Counter()
 TRAFFIC: int = 0
 QUALITY_SCORES: list[float] = []
+GUARDRAIL_VIOLATIONS: int = 0
+RECENT_ERRORS: list[dict] = []
 
 from datetime import datetime
 
@@ -40,6 +42,24 @@ def record_request(latency_ms: int, cost_usd: float, tokens_in: int, tokens_out:
 
 def record_error(error_type: str) -> None:
     ERRORS[error_type] += 1
+
+
+def record_guardrail_violation() -> None:
+    global GUARDRAIL_VIOLATIONS
+    GUARDRAIL_VIOLATIONS += 1
+
+
+def record_detailed_error(error_type: str, detail: str, message_preview: str, correlation_id: str) -> None:
+    global RECENT_ERRORS
+    error_entry = {
+        "ts": datetime.now().strftime("%H:%M:%S"),
+        "type": error_type,
+        "detail": detail,
+        "message": message_preview,
+        "correlation_id": correlation_id
+    }
+    RECENT_ERRORS.insert(0, error_entry)
+    RECENT_ERRORS = RECENT_ERRORS[:20]  # Keep only last 20
 
 
 
@@ -79,6 +99,8 @@ def snapshot() -> dict:
         "tokens_out_total": sum(REQUEST_TOKENS_OUT),
         "error_breakdown": dict(ERRORS),
         "quality_avg": round(mean(QUALITY_SCORES), 4) if QUALITY_SCORES else 0.0,
+        "guardrail_violations": GUARDRAIL_VIOLATIONS,
+        "recent_errors": RECENT_ERRORS,
 
         # traffic
         "traffic_by_day": dict(traffic_by_day),

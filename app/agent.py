@@ -33,6 +33,9 @@ class LabAgent:
         self.llm = FakeLLM(model=model)
 
     def run(self, user_id: str, feature: str, session_id: str, message: str) -> AgentResult:
+        # 🛡️ Guardrails Check FIRST
+        self._apply_guardrails(message)
+
         client = get_client()
         # Start a span manually to ensure it is linked to the trace
         with client.start_as_current_span(
@@ -48,24 +51,34 @@ class LabAgent:
             started = time.perf_counter()
             docs = retrieve(message)
             
-            response = self.llm.generate(
-                prompt=f"Context: {docs}\nQuestion: {message}"
-            )
+            prompt = f"Feature={feature}\nDocs={docs}\nQuestion={message}"
+            response = self.llm.generate(prompt)
             
-            latency_ms = (time.perf_counter() - started) * 1000
-            cost_usd = (response.usage.input_tokens * 0.01 + response.usage.output_tokens * 0.03) / 1000
+            latency_ms = int((time.perf_counter() - started) * 1000)
+            cost_usd = self._estimate_cost(response.usage.input_tokens, response.usage.output_tokens)
+            
+            # 📊 Quality & Evaluation Scores
             quality_score = self._heuristic_quality(message, response.text, docs)
+            relevancy_score = round(0.8 if any(doc[:20].lower() in response.text.lower() for doc in docs) else 0.4, 2)
+            faithfulness_score = round(0.9 if len(docs) > 0 and len(response.text) > 20 else 0.5, 2)
 
             root_span.update(
                 output={"answer": response.text},
-                metadata={"quality_score": quality_score}
+                metadata={
+                    "quality_score": quality_score,
+                    "relevancy": relevancy_score,
+                    "faithfulness": faithfulness_score
+                }
             )
 
+            # Langfuse scores
             langfuse_context.score(
                 name="quality",
                 value=quality_score,
                 comment="Heuristic quality score",
             )
+            langfuse_context.score(name="relevancy", value=relevancy_score)
+            langfuse_context.score(name="faithfulness", value=faithfulness_score)
             langfuse_context.flush()
 
             metrics.record_request(
@@ -78,13 +91,13 @@ class LabAgent:
 
             result = AgentResult(
                 answer=response.text,
-                latency_ms=int(latency_ms),
+                latency_ms=latency_ms,
                 tokens_in=response.usage.input_tokens,
                 tokens_out=response.usage.output_tokens,
                 cost_usd=cost_usd,
                 quality_score=quality_score,
-                relevancy_score=0.0,
-                faithfulness_score=0.0,
+                relevancy_score=relevancy_score,
+                faithfulness_score=faithfulness_score,
             )
 
         self._persist_trace(user_id, feature, session_id, message, result)
@@ -127,3 +140,23 @@ class LabAgent:
         if "[REDACTED" in answer:
             score -= 0.2
         return round(max(0.0, min(1.0, score)), 2)
+
+    _BLOCKLIST: list[str] = [
+        "ignore instructions",
+        "ignore all instructions",
+        "system override",
+        "admin bypass",
+        "ignore previous instructions",
+        "forget your",
+        "act as",
+        "jailbreak",
+        "dan mode",
+    ]
+
+    def _apply_guardrails(self, message: str) -> None:
+        """Raise ValueError if the message violates content guardrails."""
+        lower = message.lower()
+        for phrase in self._BLOCKLIST:
+            if phrase in lower:
+                metrics.record_guardrail_violation()
+                raise ValueError(f"Guardrail violation: blocked phrase detected — '{phrase}'")
