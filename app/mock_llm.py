@@ -25,13 +25,28 @@ class FakeLLM:
         self.model = model
 
     def generate(self, prompt: str) -> FakeResponse:
+        import ast
+        
         time.sleep(0.15)
         input_tokens = max(20, len(prompt) // 4)
         output_tokens = random.randint(80, 180)
         if STATE["cost_spike"]:
             output_tokens *= 4
-        answer = (
-            "Starter answer. Teams should improve this output logic and add better quality checks. "
-            "Use retrieved context and keep responses concise."
-        )
+            
+        docs = []
+        for line in prompt.split('\n'):
+            if line.startswith("Docs="):
+                try:
+                    docs_str = line[len("Docs="):]
+                    docs = ast.literal_eval(docs_str)
+                except Exception:
+                    pass
+                break
+                
+        if not docs or "No domain document matched" in docs[0]:
+            answer = "I'm sorry, I couldn't find any relevant cooking guide for your request."
+        else:
+            doc_context = " ".join(docs)
+            answer = f"Here is the culinary advice you requested: {doc_context}"
+
         return FakeResponse(text=answer, usage=FakeUsage(input_tokens, output_tokens), model=self.model)

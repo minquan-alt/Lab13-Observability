@@ -4,8 +4,6 @@ import time
 
 from .incidents import STATE
 
-from __future__ import annotations
-
 CORPUS = {
     # =========================
     # DISH DOCS

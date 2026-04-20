@@ -44,21 +44,21 @@ async def metrics() -> dict:
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: Request, body: ChatRequest) -> ChatResponse:
-    # TODO: Enrich logs with request context (user_id_hash, session_id, feature, model, env)
-    bind_contextvars(
-        user_id_hash=hash_user_id(body.user_id),
-        session_id=body.session_id or "unknown",
-        feature=body.feature or "chat",
-        model=body.model or "default",
-        env=os.getenv("APP_ENV", "dev"),
-    )
-
-    log.info(   
-        "request_received",
-        service=os.getenv("APP_NAME", "api"),
-        payload={"message_preview": summarize_text(body.message)},
-    )
     try:
+        bind_contextvars(
+            user_id_hash=hash_user_id(body.user_id),
+            session_id=body.session_id or "unknown",
+            feature=body.feature or "chat",
+            model=body.model or agent.model,
+            env=os.getenv("APP_ENV", "dev"),
+        )
+
+        log.info(   
+            "request_received",
+            service=os.getenv("APP_NAME", "api"),
+            payload={"message_preview": summarize_text(body.message)},
+        )
+
         result = agent.run(
             user_id=body.user_id,
             feature=body.feature,
@@ -113,3 +113,190 @@ async def disable_incident(name: str) -> JSONResponse:
         return JSONResponse({"ok": True, "incidents": status()})
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+from fastapi.responses import HTMLResponse
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Observability Dashboard</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <style>
+            body {
+                font-family: Arial;
+                background: #0f172a;
+                color: white;
+                padding: 20px;
+            }
+
+            h1 {
+                text-align: center;
+            }
+
+            h2 {
+                margin-top: 30px;
+                color: #94a3b8;
+            }
+
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }
+
+            .card {
+                background: #1e293b;
+                padding: 20px;
+                border-radius: 10px;
+                text-align: center;
+            }
+
+            .value {
+                font-size: 24px;
+                font-weight: bold;
+                margin-top: 10px;
+            }
+
+            canvas {
+                background: #1e293b;
+                padding: 10px;
+                border-radius: 10px;
+                margin-top: 20px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>📊 Observability Dashboard</h1>
+
+        <h2>🟦 System Health</h2>
+        <div class="grid">
+            <div class="card">
+                <div>Traffic</div>
+                <div class="value" id="traffic">-</div>
+            </div>
+
+            <div class="card">
+                <div>Error Rate</div>
+                <div class="value" id="error_rate">-</div>
+            </div>
+
+            <div class="card">
+                <div>Total Errors</div>
+                <div class="value" id="errors">-</div>
+            </div>
+        </div>
+
+        <!-- 🔥 GRAPH -->
+        <canvas id="trafficChart"></canvas>
+
+        <h2>🟨 Performance</h2>
+        <div class="grid">
+            <div class="card"><div>P50</div><div class="value" id="p50">-</div></div>
+            <div class="card"><div>P95</div><div class="value" id="p95">-</div></div>
+            <div class="card"><div>P99</div><div class="value" id="p99">-</div></div>
+        </div>
+
+        <h2>🟩 Cost & Quality</h2>
+        <div class="grid">
+            <div class="card"><div>Avg Cost</div><div class="value" id="cost">-</div></div>
+            <div class="card"><div>Quality</div><div class="value" id="quality">-</div></div>
+        </div>
+
+        <script>
+            const ctx = document.getElementById('trafficChart').getContext('2d');
+
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Requests (7 days)',
+                        data: []
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            ticks: {
+                                autoSkip: false   // 🔥 tránh mất cột
+                            }
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // 🔥 luôn tạo đủ 7 ngày + label KHÔNG TRÙNG
+            function getLast7Days(data) {
+                const result = [];
+                const today = new Date();
+
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(today.getDate() - i);
+
+                    const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
+
+                    result.push({
+                        label: key,   // 🔥 QUAN TRỌNG: unique label
+                        value: data[key] || 0
+                    });
+                }
+
+                return result;
+            }
+
+            async function updateDashboard() {
+                try {
+                    const res = await fetch("/metrics");
+                    const data = await res.json();
+
+                    const totalErrors = Object.values(data.error_breakdown || {})
+                        .reduce((a, b) => a + b, 0);
+
+                    const errorRate = data.traffic > 0
+                        ? (totalErrors / data.traffic).toFixed(3)
+                        : 0;
+
+                    // cards
+                    document.getElementById("traffic").innerText = data.traffic ?? 0;
+                    document.getElementById("error_rate").innerText = errorRate;
+                    document.getElementById("errors").innerText = totalErrors;
+
+                    document.getElementById("p50").innerText = (data.latency_p50 ?? 0) + " ms";
+                    document.getElementById("p95").innerText = (data.latency_p95 ?? 0) + " ms";
+                    document.getElementById("p99").innerText = (data.latency_p99 ?? 0) + " ms";
+
+                    document.getElementById("cost").innerText = data.avg_cost_usd ?? 0;
+                    document.getElementById("quality").innerText = data.quality_avg ?? 0;
+
+                    // 🔥 ALWAYS fallback
+                    const trafficData = data.traffic_by_day || {};
+
+                    const last7 = getLast7Days(trafficData);
+
+                    console.log("DEBUG last7:", last7); // 👈 check ở console
+
+                    chart.data.labels = last7.map(x => x.label);
+                    chart.data.datasets[0].data = last7.map(x => x.value);
+
+                    chart.update();
+
+                } catch (e) {
+                    console.error("Dashboard error:", e);
+                }
+            }
+
+            setInterval(updateDashboard, 3000);
+            updateDashboard();
+        </script>
+    </body>
+    </html>
+    """
