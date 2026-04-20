@@ -14,6 +14,8 @@ QUALITY_SCORES: list[float] = []
 from datetime import datetime
 
 REQUEST_TIMES: list[datetime] = []
+TOKENS_IN_TIMES: list[tuple[datetime, int]] = []
+TOKENS_OUT_TIMES: list[tuple[datetime, int]] = []
 
 import time
 
@@ -24,6 +26,10 @@ def record_request(latency_ms: int, cost_usd: float, tokens_in: int, tokens_out:
 
     now = datetime.now()
     REQUEST_TIMES.append(now)
+
+    # 🔥 ADD THESE
+    TOKENS_IN_TIMES.append((now, tokens_in))
+    TOKENS_OUT_TIMES.append((now, tokens_out))
 
     REQUEST_LATENCIES.append(latency_ms)
     REQUEST_COSTS.append(cost_usd)
@@ -51,6 +57,17 @@ from collections import Counter
 def snapshot() -> dict:
     traffic_by_day = Counter(ts.strftime("%Y-%m-%d") for ts in REQUEST_TIMES)
 
+    tokens_in_by_day = {}
+    tokens_out_by_day = {}
+
+    for ts, val in TOKENS_IN_TIMES:
+        key = ts.strftime("%Y-%m-%d")
+        tokens_in_by_day[key] = tokens_in_by_day.get(key, 0) + val
+
+    for ts, val in TOKENS_OUT_TIMES:
+        key = ts.strftime("%Y-%m-%d")
+        tokens_out_by_day[key] = tokens_out_by_day.get(key, 0) + val
+
     return {
         "traffic": TRAFFIC,
         "latency_p50": percentile(REQUEST_LATENCIES, 50),
@@ -63,6 +80,10 @@ def snapshot() -> dict:
         "error_breakdown": dict(ERRORS),
         "quality_avg": round(mean(QUALITY_SCORES), 4) if QUALITY_SCORES else 0.0,
 
-        # 🔥 NEW
+        # traffic
         "traffic_by_day": dict(traffic_by_day),
+
+        # 🔥 NEW (QUAN TRỌNG)
+        "tokens_in_by_day": tokens_in_by_day,
+        "tokens_out_by_day": tokens_out_by_day,
     }

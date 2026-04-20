@@ -53,7 +53,11 @@ class LabAgent:
             metadata={"doc_count": len(docs), "query_preview": summarize_text(message)},
             usage_details={"input": response.usage.input_tokens, "output": response.usage.output_tokens},
         )
-        langfuse_context.score(name="quality", value=quality_score)
+        langfuse_context.score(
+            name="quality",
+            value=quality_score,
+            comment="Heuristic quality score",
+        )
         langfuse_context.score(name="relevancy", value=relevancy_score)
         langfuse_context.score(name="faithfulness", value=faithfulness_score)
 

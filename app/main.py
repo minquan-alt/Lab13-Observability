@@ -133,14 +133,8 @@ async def dashboard():
                 padding: 20px;
             }
 
-            h1 {
-                text-align: center;
-            }
-
-            h2 {
-                margin-top: 30px;
-                color: #94a3b8;
-            }
+            h1 { text-align: center; }
+            h2 { margin-top: 30px; color: #94a3b8; }
 
             .grid {
                 display: grid;
@@ -167,12 +161,32 @@ async def dashboard():
                 border-radius: 10px;
                 margin-top: 20px;
             }
+
+            .controls {
+                text-align: center;
+                margin-top: 10px;
+            }
+
+            button {
+                padding: 8px 16px;
+                margin: 5px;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                background: #334155;
+                color: white;
+            }
+
+            button.active {
+                background: #3b82f6;
+            }
         </style>
     </head>
 
     <body>
         <h1>📊 Observability Dashboard</h1>
 
+        <!-- SYSTEM -->
         <h2>🟦 System Health</h2>
         <div class="grid">
             <div class="card">
@@ -191,9 +205,16 @@ async def dashboard():
             </div>
         </div>
 
-        <!-- 🔥 GRAPH -->
-        <canvas id="trafficChart"></canvas>
+        <!-- 🔥 TOGGLE -->
+        <div class="controls">
+            <button id="btnTraffic" class="active">Traffic</button>
+            <button id="btnTokens">Tokens</button>
+        </div>
 
+        <!-- GRAPH -->
+        <canvas id="chart"></canvas>
+
+        <!-- PERFORMANCE -->
         <h2>🟨 Performance</h2>
         <div class="grid">
             <div class="card"><div>P50</div><div class="value" id="p50">-</div></div>
@@ -201,6 +222,7 @@ async def dashboard():
             <div class="card"><div>P99</div><div class="value" id="p99">-</div></div>
         </div>
 
+        <!-- COST -->
         <h2>🟩 Cost & Quality</h2>
         <div class="grid">
             <div class="card"><div>Avg Cost</div><div class="value" id="cost">-</div></div>
@@ -208,91 +230,111 @@ async def dashboard():
         </div>
 
         <script>
-            const ctx = document.getElementById('trafficChart').getContext('2d');
+            let mode = "traffic";
+
+            const ctx = document.getElementById('chart').getContext('2d');
 
             const chart = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Requests (7 days)',
-                        data: []
-                    }]
-                },
+                data: { labels: [], datasets: [] },
                 options: {
+                    responsive: true,
                     scales: {
-                        x: {
-                            ticks: {
-                                autoSkip: false   // 🔥 tránh mất cột
-                            }
-                        },
-                        y: {
-                            beginAtZero: true
-                        }
+                        x: { stacked: false },
+                        y: { beginAtZero: true, stacked: false }
                     }
                 }
             });
 
-            // 🔥 luôn tạo đủ 7 ngày + label KHÔNG TRÙNG
-            function getLast7Days(data) {
+            function getLast7Days() {
                 const result = [];
                 const today = new Date();
 
                 for (let i = 6; i >= 0; i--) {
                     const d = new Date();
                     d.setDate(today.getDate() - i);
-
-                    const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
-
-                    result.push({
-                        label: key,   // 🔥 QUAN TRỌNG: unique label
-                        value: data[key] || 0
-                    });
+                    result.push(d.toISOString().slice(0, 10));
                 }
 
                 return result;
             }
 
             async function updateDashboard() {
-                try {
-                    const res = await fetch("/metrics");
-                    const data = await res.json();
+                const res = await fetch("/metrics");
+                const data = await res.json();
 
-                    const totalErrors = Object.values(data.error_breakdown || {})
-                        .reduce((a, b) => a + b, 0);
+                // ===== CARDS =====
+                const totalErrors = Object.values(data.error_breakdown || {})
+                    .reduce((a, b) => a + b, 0);
 
-                    const errorRate = data.traffic > 0
-                        ? (totalErrors / data.traffic).toFixed(3)
-                        : 0;
+                const errorRate = data.traffic > 0
+                    ? (totalErrors / data.traffic).toFixed(3)
+                    : 0;
 
-                    // cards
-                    document.getElementById("traffic").innerText = data.traffic ?? 0;
-                    document.getElementById("error_rate").innerText = errorRate;
-                    document.getElementById("errors").innerText = totalErrors;
+                document.getElementById("traffic").innerText = data.traffic ?? 0;
+                document.getElementById("error_rate").innerText = errorRate;
+                document.getElementById("errors").innerText = totalErrors;
 
-                    document.getElementById("p50").innerText = (data.latency_p50 ?? 0) + " ms";
-                    document.getElementById("p95").innerText = (data.latency_p95 ?? 0) + " ms";
-                    document.getElementById("p99").innerText = (data.latency_p99 ?? 0) + " ms";
+                document.getElementById("p50").innerText = (data.latency_p50 ?? 0) + " ms";
+                document.getElementById("p95").innerText = (data.latency_p95 ?? 0) + " ms";
+                document.getElementById("p99").innerText = (data.latency_p99 ?? 0) + " ms";
 
-                    document.getElementById("cost").innerText = data.avg_cost_usd ?? 0;
-                    document.getElementById("quality").innerText = data.quality_avg ?? 0;
+                document.getElementById("cost").innerText = data.avg_cost_usd ?? 0;
+                document.getElementById("quality").innerText = data.quality_avg ?? 0;
 
-                    // 🔥 ALWAYS fallback
+                // ===== GRAPH =====
+                const days = getLast7Days();
+
+                if (mode === "traffic") {
                     const trafficData = data.traffic_by_day || {};
 
-                    const last7 = getLast7Days(trafficData);
+                    chart.data.labels = days;
+                    chart.data.datasets = [{
+                        label: "Requests",
+                        data: days.map(d => trafficData[d] || 0)
+                    }];
 
-                    console.log("DEBUG last7:", last7); // 👈 check ở console
-
-                    chart.data.labels = last7.map(x => x.label);
-                    chart.data.datasets[0].data = last7.map(x => x.value);
-
-                    chart.update();
-
-                } catch (e) {
-                    console.error("Dashboard error:", e);
+                    chart.options.scales.x.stacked = false;
+                    chart.options.scales.y.stacked = false;
                 }
+
+                if (mode === "tokens") {
+                    const tokensIn = data.tokens_in_by_day || {};
+                    const tokensOut = data.tokens_out_by_day || {};
+
+                    chart.data.labels = days;
+                    chart.data.datasets = [
+                        {
+                            label: "Tokens In",
+                            data: days.map(d => tokensIn[d] || 0)
+                        },
+                        {
+                            label: "Tokens Out",
+                            data: days.map(d => tokensOut[d] || 0)
+                        }
+                    ];
+
+                    chart.options.scales.x.stacked = true;
+                    chart.options.scales.y.stacked = true;
+                }
+
+                chart.update();
             }
+
+            // toggle
+            document.getElementById("btnTraffic").onclick = () => {
+                mode = "traffic";
+                btnTraffic.classList.add("active");
+                btnTokens.classList.remove("active");
+                updateDashboard();
+            };
+
+            document.getElementById("btnTokens").onclick = () => {
+                mode = "tokens";
+                btnTokens.classList.add("active");
+                btnTraffic.classList.remove("active");
+                updateDashboard();
+            };
 
             setInterval(updateDashboard, 3000);
             updateDashboard();
