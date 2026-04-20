@@ -44,6 +44,11 @@ class LabAgent:
             metadata={"doc_count": len(docs), "query_preview": summarize_text(message)},
             usage_details={"input": response.usage.input_tokens, "output": response.usage.output_tokens},
         )
+        langfuse_context.score(
+            name="quality",
+            value=quality_score,
+            comment="Heuristic quality score",
+        )
 
         metrics.record_request(
             latency_ms=latency_ms,
