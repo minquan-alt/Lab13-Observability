@@ -6,8 +6,8 @@
 - [GROUP_NAME]: C401 A2
 - [REPO_URL]: 
 - [MEMBERS]:
-  - Member A: [Name] | Role: Logging & PII
-  - Member B: [Name] | Role: Tracing & Enrichment
+  - Member A: [Name] Hoàng Bá Minh Quang | Role: Tech Lead & Logging & PII
+  - Member B: [Name] Đỗ Lê Thành Nhân | Role: Tracing & Enrichment
   - Member C: [Name] Nguyễn Anh Tài | Role: SLO & Alerts
   - Member D: [Name] Trần Quang Long | Role: Load Test & Dashboard
   - Member E: [Name] | Role: Demo & Report
@@ -149,9 +149,15 @@ Hệ thống bắt đầu vi phạm SLO về Latency (< 3000ms) khi chạy load 
 
 ## 5. Individual Contributions & Evidence
 
-### [MEMBER_A_NAME]
+### [MEMBER_A_NAME]: Hoàng Bá Minh Quang
 - [TASKS_COMPLETED]: 
-- [EVIDENCE_LINK]: (Link to specific commit or PR)
+  - **Tech Lead:** Phân công nhiệm vụ, điều phối dự án, hỗ trợ các thành viên khác fix bug.
+  - **Vận hành hệ thống Logging & Middleware:** Hoàn thiện `app/middleware.py` (correlation_id) và Log Enrichment trong `app/main.py`.
+  - **Bảo mật & PII:** Kích hoạt bộ lọc PII trong `app/logging_config.py` và cập nhật regex trong `app/pii.py`.
+  - **Dữ liệu kiểm thử:** Tạo bộ `mock_data` (`app/mock_rag.py`) để phục vụ cho truy xuất data.
+- [EVIDENCE_LINK]: 
+  - [middleware.py](app/middleware.py), [main.py](app/main.py), [logging_config.py](app/logging_config.py), [pii.py](app/pii.py), [mock_rag.py](app/mock_rag.py)
+
 
 ### [MEMBER_B_NAME]: Đỗ Lê Thành Nhân
 - [TASKS_COMPLETED]:
