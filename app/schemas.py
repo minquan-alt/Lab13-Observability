@@ -11,7 +11,8 @@ class ChatRequest(BaseModel):
     session_id: str = Field(..., examples=["s_demo_01"])
     feature: str = Field(default="qa", examples=["qa", "summary"])
     message: str = Field(..., min_length=1)
-    model: str | None = Field(default="default", examples=["gpt-4", "claude"])
+    model: str | None = Field(default=None, examples=["claude-3-5-sonnet"])
+
 
 class ChatResponse(BaseModel):
     answer: str
