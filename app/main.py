@@ -113,3 +113,101 @@ async def disable_incident(name: str) -> JSONResponse:
         return JSONResponse({"ok": True, "incidents": status()})
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+from fastapi.responses import HTMLResponse
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Observability Dashboard</title>
+        <style>
+            body {
+                font-family: Arial;
+                background: #0f172a;
+                color: white;
+                padding: 20px;
+            }
+            h1 {
+                text-align: center;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }
+            .card {
+                background: #1e293b;
+                padding: 20px;
+                border-radius: 10px;
+                text-align: center;
+            }
+            .value {
+                font-size: 28px;
+                font-weight: bold;
+                margin-top: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>📊 Observability Dashboard</h1>
+        <div class="grid">
+            <div class="card">
+                <div>Request Rate</div>
+                <div class="value" id="traffic">-</div>
+            </div>
+
+            <div class="card">
+                <div>Error Rate</div>
+                <div class="value" id="error_rate">-</div>
+            </div>
+
+            <div class="card">
+                <div>Latency P95</div>
+                <div class="value" id="latency">-</div>
+            </div>
+
+            <div class="card">
+                <div>Avg Cost ($)</div>
+                <div class="value" id="cost">-</div>
+            </div>
+
+            <div class="card">
+                <div>Quality</div>
+                <div class="value" id="quality">-</div>
+            </div>
+
+            <div class="card">
+                <div>Total Errors</div>
+                <div class="value" id="errors">-</div>
+            </div>
+        </div>
+
+        <script>
+            async function loadMetrics() {
+                const res = await fetch("/metrics");
+                const data = await res.json();
+
+                const totalErrors = Object.values(data.error_breakdown)
+                    .reduce((a, b) => a + b, 0);
+
+                const errorRate = data.traffic > 0
+                    ? (totalErrors / data.traffic).toFixed(3)
+                    : 0;
+
+                document.getElementById("traffic").innerText = data.traffic;
+                document.getElementById("error_rate").innerText = errorRate;
+                document.getElementById("latency").innerText = data.latency_p95 + " ms";
+                document.getElementById("cost").innerText = data.avg_cost_usd;
+                document.getElementById("quality").innerText = data.quality_avg;
+                document.getElementById("errors").innerText = totalErrors;
+            }
+
+            setInterval(loadMetrics, 1000);
+            loadMetrics();
+        </script>
+    </body>
+    </html>
+    """
