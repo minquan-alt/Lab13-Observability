@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import time
 
-from .incidents import STATE
+try:
+    from .incidents import STATE
+except ImportError:
+    from incidents import STATE
+
+from .tracing import observe
 
 CORPUS = {
     # =========================
@@ -14,7 +19,6 @@ CORPUS = {
         "Basic steps: stir-fry garlic and onion, scramble eggs, add rice, season, then add vegetables.",
         "Use high heat and keep stirring to avoid clumping.",
     ],
-
     "fried_rice_variants": [
         "Chicken fried rice can add diced chicken breast or thigh for more protein.",
         "Shrimp fried rice works well with a small amount of fish sauce and spring onion.",
@@ -306,6 +310,7 @@ CORPUS = {
 }
 
 
+@observe(as_type="span", name="RAG Retrieve")
 def retrieve(message: str) -> list[str]:
     if STATE["tool_fail"]:
         raise RuntimeError("Vector store timeout")

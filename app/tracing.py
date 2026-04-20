@@ -2,23 +2,39 @@ from __future__ import annotations
 
 import os
 from typing import Any
+from dotenv import load_dotenv
+
+load_dotenv()
 
 try:
-    from langfuse.decorators import observe, langfuse_context
+    from langfuse import observe, get_client
+    
+    class _LangfuseContextShim:
+        def update_current_trace(self, **kwargs: Any) -> None:
+            client = get_client()
+            if client:
+                client.update_current_trace(**kwargs)
+
+        def update_current_observation(self, **kwargs: Any) -> None:
+            client = get_client()
+            if client:
+                try:
+                    client.update_current_generation(**kwargs)
+                except Exception:
+                    client.update_current_span(**kwargs)
+
+        def score(self, **kwargs: Any) -> None:
+            client = get_client()
+            if client:
+                client.score_current_trace(**kwargs)
+
+    langfuse_context = _LangfuseContextShim()
+
 except Exception:  # pragma: no cover
     def observe(*args: Any, **kwargs: Any):
         def decorator(func):
             return func
         return decorator
-
-    class _DummyContext:
-        def update_current_trace(self, **kwargs: Any) -> None:
-            return None
-
-        def update_current_observation(self, **kwargs: Any) -> None:
-            return None
-
-    langfuse_context = _DummyContext()
 
 
 def tracing_enabled() -> bool:
